@@ -1,6 +1,21 @@
-<template></template>
+<template>
+  <div>
+    <h1>버튼을 클릭하여 포스트 API 호출하기 - 테스트 ($fetch)</h1>
+    <button @click="fetchPost" :disabled="loading">
+      포스트 정보 로드 Load
+    </button>
+
+    <div v-if="loading">로딩 중...</div>
+
+    <div v-if="post">
+      <h2>{{ post.title }}</h2>
+      <p>{{ post.body }}</p>
+    </div>
+  </div>
+</template>
 
 <script setup lang="ts">
+import { ref } from "vue";
 // 동적 메타 태그 관리
 useHead({
   // 페이지 제목
@@ -27,4 +42,33 @@ useSeoMeta({
   ogDescription: "og 디스크립션",
   ogImage: "https://do-it-example.com/og-image.png",
 });
+
+interface Post {
+  id: number;
+  userId: number;
+  title: string;
+  body: string;
+}
+
+const post = ref<Post | null>(null);
+const loading = ref<boolean>(false);
+
+// $fetch
+// Nuxt 애플리케이션 전역 사용 가능
+// 주로 클라이언트 측 이벤트 기반 데이터 페칭에 적합
+// 서버 측 렌더링 시에는 데이터 중복 요청(서버, 클라이언트에서 모두 호출 됨)이 발생할 수 있어 useFetch, useAsyncData 사용 권장
+// (Next.js의 fetch의 축소판 느낌)
+
+async function fetchPost() {
+  loading.value = true;
+
+  try {
+    post.value = await $fetch("https://jsonplaceholder.typicode.com/posts/1");
+  } catch (error) {
+    console.log(error);
+    throw new Error(`POST API FETCH ERROR: ${error}`);
+  } finally {
+    loading.value = false;
+  }
+}
 </script>
